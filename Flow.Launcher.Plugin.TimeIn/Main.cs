@@ -1,21 +1,30 @@
 using System;
 using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 using Flow.Launcher.Plugin;
+
 
 namespace Flow.Launcher.Plugin.TimeIn
 {
-    public class TimeIn : IPlugin
+    public class TimeIn : IAsyncPlugin
     {
         private PluginInitContext _context;
 
-        public void Init(PluginInitContext context)
+        public Task InitAsync(PluginInitContext context)
         {
             _context = context;
+
+            return Task.CompletedTask;
         }
 
-        public List<Result> Query(Query query)
+        public Task<List<Result>> QueryAsync(Query query, CancellationToken token)
         {
-            return new List<Result>();
+            token.ThrowIfCancellationRequested();
+
+            var results = new List<Result>{};
+
+            return Task.FromResult(results);
         }
     }
 }
