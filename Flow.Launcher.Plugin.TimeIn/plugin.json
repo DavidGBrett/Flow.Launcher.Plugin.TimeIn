@@ -1,0 +1,12 @@
+{
+    "ID": "3BD17231C4B04DFFABBE2C40668D052D",
+    "ActionKeyword": "ti",
+    "Name": "Time In",
+    "Description": "Get the current time around the world",
+    "Author": "DavidGBrett",
+    "Version": "1.0.0",
+    "Language": "csharp",
+    "Website": "https://github.com/DavidGBrett/Flow.Launcher.Plugin.TimeIn",
+    "IcoPath": "icon.png",
+    "ExecuteFileName": "Flow.Launcher.Plugin.TimeIn.dll"
+}
