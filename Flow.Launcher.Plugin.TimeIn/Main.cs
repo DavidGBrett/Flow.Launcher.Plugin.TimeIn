@@ -15,10 +15,15 @@ namespace Flow.Launcher.Plugin.TimeIn
         private HttpClient _httpClient;
         private const string ApiBaseUrl = "https://time.now/developer/api/";
 
+        private List<string> _savedTimezones;
 
         public Task InitAsync(PluginInitContext context)
         {
             _context = context;
+
+            _savedTimezones = new List<string>{
+                "Asia/Shanghai"
+            };
 
             _httpClient = new HttpClient
             {
@@ -34,18 +39,41 @@ namespace Flow.Launcher.Plugin.TimeIn
 
             var results = new List<Result>{};
 
-            List<string> timezones = await GetTimezones(token);
-
-            token.ThrowIfCancellationRequested();
-
-            foreach (var timezone in timezones)
+            foreach (var timezone in _savedTimezones)
             {
+                var dateTime = await GetTimezoneTime(timezone,token);
+
                 results.Add(new Result{
-                    Title = timezone,
+                    Title = $"{timezone} - {dateTime.Hour}:{dateTime.Minute}",
                 }); 
             }
 
             return results;
+        }
+
+        public async Task<DateTimeOffset> GetTimezoneTime(string timezone, CancellationToken token)
+        {
+            token.ThrowIfCancellationRequested();
+
+            var fullUrl = $"{ApiBaseUrl}timezone/{timezone}";
+            
+            var response = await _httpClient.GetAsync(fullUrl,token);
+            response.EnsureSuccessStatusCode();
+            
+            var responseBody = await response.Content.ReadAsStringAsync(token);
+
+
+            token.ThrowIfCancellationRequested();
+
+            using var doc = JsonDocument.Parse(responseBody);
+
+            var timeString = doc.RootElement.GetProperty("datetime").GetString();
+
+
+            var dateTime = DateTimeOffset.Parse(timeString);
+
+            return dateTime;
+            
         }
 
         public async Task<List<string>> GetTimezones(CancellationToken token)
