@@ -44,7 +44,7 @@ namespace Flow.Launcher.Plugin.TimeIn
                 var dateTime = await GetTimezoneTime(timezone,token);
 
                 results.Add(new Result{
-                    Title = $"{timezone} - {dateTime.Hour}:{dateTime.Minute}",
+                    Title = $"{timezone} - {dateTime:HH:mm}",
                 }); 
             }
 
