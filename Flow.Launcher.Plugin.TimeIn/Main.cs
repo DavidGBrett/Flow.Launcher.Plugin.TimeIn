@@ -111,6 +111,7 @@ namespace Flow.Launcher.Plugin.TimeIn
                     Action =  _ =>
                     {
                         _savedTimezones.Add(timezone);
+                        _context.API.ChangeQuery("");
                         return false;
                     }
                 }); 
