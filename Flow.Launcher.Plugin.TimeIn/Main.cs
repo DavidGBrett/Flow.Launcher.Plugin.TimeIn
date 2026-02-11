@@ -39,23 +39,37 @@ namespace Flow.Launcher.Plugin.TimeIn
 
             var results = new List<Result>();
 
-            if (query.Search.StartsWith("add-")){
-                results = await GetAddTimezoneResults(token);
+            string addKeyword = "add-";
+
+            if (query.Search.StartsWith(addKeyword)){
+                var filter = query.Search.Substring(addKeyword.Length).ToLower();
+
+                results = await GetAddTimezoneResults(
+                    filter:filter,
+                    token:token
+                );
             }
             else{
-                results = await GetSavedTimezonesResults(token);
+                var filter = query.Search.ToLower();
+
+                results = await GetSavedTimezonesResults(
+                    filter:filter,
+                    token:token
+                );
             }
 
             return results;
         }
 
-        private async Task<List<Result>> GetSavedTimezonesResults(CancellationToken token){
+        private async Task<List<Result>> GetSavedTimezonesResults(string filter, CancellationToken token){
             token.ThrowIfCancellationRequested();
 
             var results = new List<Result>();
 
             foreach (var timezone in _savedTimezones)
             {
+                if (! timezone.ToLower().Contains(filter)) continue;
+
                 var dateTime = await GetTimezoneTime(timezone,token);
 
                 results.Add(new Result{
@@ -79,7 +93,7 @@ namespace Flow.Launcher.Plugin.TimeIn
         }
 
 
-        private async Task<List<Result>> GetAddTimezoneResults(CancellationToken token){
+        private async Task<List<Result>> GetAddTimezoneResults(string filter, CancellationToken token){
             token.ThrowIfCancellationRequested();
 
             var results = new List<Result>();
@@ -90,6 +104,8 @@ namespace Flow.Launcher.Plugin.TimeIn
 
             foreach (var timezone in timezones)
             {
+                if (! timezone.ToLower().Contains(filter)) continue;
+
                 results.Add(new Result{
                     Title = timezone,
                     Action =  _ =>
