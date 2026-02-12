@@ -182,6 +182,13 @@ namespace Flow.Launcher.Plugin.TimeIn
         {
             token.ThrowIfCancellationRequested();
 
+            var single_timezone_exceptions = new Dictionary<string,string>{
+                ["China"] = "Asia/Shanghai",
+                ["Kazakhstan"] = "Asia/Almaty",
+                ["Argentina"] = "America/Argentina/Buenos_Aires",
+                ["Uzbekistan"] = "Asia/Samarkand"
+            };
+
             const string url = "https://raw.githubusercontent.com/bxparks/tzplus/refs/heads/master/data/country_timezones.txt";
 
             var response = await _httpClient.GetAsync(url,token);
@@ -221,11 +228,23 @@ namespace Flow.Launcher.Plugin.TimeIn
                 if (parts.Length < 3)
                     continue; // malformed line
 
+                var name = CountryCodeConverter.GetCountryName(parts[1]);
+                var timezone = parts[2];
+
+                // skip extra city timezones for countries that should only have 1
+                if (
+                    name != null
+                    &&
+                    single_timezone_exceptions.ContainsKey(name) 
+                    && 
+                    single_timezone_exceptions[name] != timezone
+                ) continue;
+
                 regions.Add(new Region(
                     parts[0],
                     parts[1],
-                    CountryCodeConverter.GetCountryName(parts[1]),
-                    parts[2]
+                    name,
+                    timezone
                 ));
             }
 
