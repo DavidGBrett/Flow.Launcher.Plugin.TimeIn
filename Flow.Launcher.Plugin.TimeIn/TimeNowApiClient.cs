@@ -33,9 +33,9 @@ namespace Flow.Launcher.Plugin.TimeIn
             return JsonSerializer.Deserialize<List<string>>(responseBody);
         }
 
-        public async Task<DateTimeOffset> GetTimezoneTime(string timezone, CancellationToken token)
+        private async Task<JsonDocument> GetTimezoneDoc(string timezone, CancellationToken token)
         {
-            token.ThrowIfCancellationRequested();
+             token.ThrowIfCancellationRequested();
 
             var fullUrl = $"{ApiBaseUrl}timezone/{timezone}";
             
@@ -44,10 +44,16 @@ namespace Flow.Launcher.Plugin.TimeIn
             
             var responseBody = await response.Content.ReadAsStringAsync(token);
 
-
             token.ThrowIfCancellationRequested();
 
-            using var doc = JsonDocument.Parse(responseBody);
+            return JsonDocument.Parse(responseBody);
+        }
+
+        public async Task<DateTimeOffset> GetTimezoneTime(string timezone, CancellationToken token)
+        {
+            using var doc = await GetTimezoneDoc(timezone,token);
+
+            token.ThrowIfCancellationRequested();
 
             var timeString = doc.RootElement.GetProperty("datetime").GetString();
 
