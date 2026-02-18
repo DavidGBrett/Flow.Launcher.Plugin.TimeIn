@@ -1,10 +1,13 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Net.Http;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using Flow.Launcher.Plugin;
+using System.Globalization;
+using System.Linq;
 
 
 namespace Flow.Launcher.Plugin.TimeIn
@@ -98,16 +101,21 @@ namespace Flow.Launcher.Plugin.TimeIn
 
             var results = new List<Result>();
             
-            List<string> timezones = await GetTimezones(token);
+            List<Region> regions = await GetTimezoneCountryMappings(token);
 
             token.ThrowIfCancellationRequested();
 
-            foreach (var timezone in timezones)
+            foreach (var region in regions)
             {
-                if (! timezone.ToLower().Contains(filter)) continue;
+                var timezone = region.TimeZone;
+                var city = timezone.Split("/").Last();
+
+                var newName = $"{region.CountryName} - {city}";
+
+                if (! newName.ToLower().Contains(filter)) continue;
 
                 results.Add(new Result{
-                    Title = timezone,
+                    Title = newName,
                     Action =  _ =>
                     {
                         _savedTimezones.Add(timezone);
@@ -161,6 +169,86 @@ namespace Flow.Launcher.Plugin.TimeIn
 
             return JsonSerializer.Deserialize<List<string>>(responseBody);
             
+        }
+
+        public record Region(
+            string ContinentCode,
+            string CountryCode,
+            string CountryName,
+            string TimeZone
+        );
+
+        public async Task<List<Region>> GetTimezoneCountryMappings(CancellationToken token)
+        {
+            token.ThrowIfCancellationRequested();
+
+            var single_timezone_exceptions = new Dictionary<string,string>{
+                ["China"] = "Asia/Shanghai",
+                ["Kazakhstan"] = "Asia/Almaty",
+                ["Argentina"] = "America/Argentina/Buenos_Aires",
+                ["Uzbekistan"] = "Asia/Samarkand"
+            };
+
+            const string url = "https://raw.githubusercontent.com/bxparks/tzplus/refs/heads/master/data/country_timezones.txt";
+
+            var response = await _httpClient.GetAsync(url,token);
+            response.EnsureSuccessStatusCode();
+
+            token.ThrowIfCancellationRequested();
+
+            var responseBody = await response.Content.ReadAsStringAsync(token);
+            
+            var regions = new List<Region>();
+
+            using var reader = new StringReader(responseBody);
+
+            string? line;
+            while ((line = reader.ReadLine()) != null)
+            {
+                line = line.Trim();
+
+                // Skip blank lines
+                if (string.IsNullOrEmpty(line))
+                    continue;
+
+                // Skip comments
+                if (line.StartsWith("#"))
+                    continue;
+
+                // Remove inline comments
+                var hashIndex = line.IndexOf('#');
+                if (hashIndex >= 0)
+                    line = line[..hashIndex].Trim();
+
+                var parts = line.Split(
+                    ' ',
+                    StringSplitOptions.RemoveEmptyEntries
+                );
+
+                if (parts.Length < 3)
+                    continue; // malformed line
+
+                var name = CountryCodeConverter.GetCountryName(parts[1]);
+                var timezone = parts[2];
+
+                // skip extra city timezones for countries that should only have 1
+                if (
+                    name != null
+                    &&
+                    single_timezone_exceptions.ContainsKey(name) 
+                    && 
+                    single_timezone_exceptions[name] != timezone
+                ) continue;
+
+                regions.Add(new Region(
+                    parts[0],
+                    parts[1],
+                    name,
+                    timezone
+                ));
+            }
+
+            return regions;
         }
     }
 }
