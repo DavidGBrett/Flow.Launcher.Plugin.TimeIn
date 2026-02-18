@@ -126,7 +126,7 @@ namespace Flow.Launcher.Plugin.TimeIn
                         _settings.SavedTimezones.Add(savedTimezone);
                         _context.API.SaveSettingJsonStorage<Settings>();
 
-                        _context.API.ChangeQuery("");
+                        _context.API.ChangeQuery(_context.CurrentPluginMetadata.ActionKeyword);
                         return false;
                     }
                 }); 
