@@ -18,7 +18,7 @@ namespace Flow.Launcher.Plugin.TimeIn
         private PluginInitContext _context;
         private Settings _settings;
         private HttpClient _httpClient;
-        private const string ApiBaseUrl = "https://time.now/developer/api/";
+        private TimeNowApiClient _timeNowApiClient;
 
         public Task InitAsync(PluginInitContext context)
         {
@@ -30,6 +30,8 @@ namespace Flow.Launcher.Plugin.TimeIn
             {
                 Timeout = TimeSpan.FromSeconds(30)
             };
+
+            _timeNowApiClient = new TimeNowApiClient(_httpClient);
 
             return Task.CompletedTask;
         }
@@ -71,7 +73,7 @@ namespace Flow.Launcher.Plugin.TimeIn
             {
                 if (! savedTimezone.IanaTimeZone.ToLower().Contains(filter)) continue;
 
-                var dateTime = await GetTimezoneTime(savedTimezone.IanaTimeZone,token);
+                var dateTime = await _timeNowApiClient.GetTimezoneTime(savedTimezone.IanaTimeZone,token);
 
                 results.Add(new Result{
                     Title = $"{savedTimezone.IanaTimeZone} - {dateTime:HH:mm}",
@@ -133,48 +135,9 @@ namespace Flow.Launcher.Plugin.TimeIn
             return results;
         }
 
-        public async Task<DateTimeOffset> GetTimezoneTime(string timezone, CancellationToken token)
-        {
-            token.ThrowIfCancellationRequested();
+       
 
-            var fullUrl = $"{ApiBaseUrl}timezone/{timezone}";
-            
-            var response = await _httpClient.GetAsync(fullUrl,token);
-            response.EnsureSuccessStatusCode();
-            
-            var responseBody = await response.Content.ReadAsStringAsync(token);
-
-
-            token.ThrowIfCancellationRequested();
-
-            using var doc = JsonDocument.Parse(responseBody);
-
-            var timeString = doc.RootElement.GetProperty("datetime").GetString();
-
-
-            var dateTime = DateTimeOffset.Parse(timeString);
-
-            return dateTime;
-            
-        }
-
-        public async Task<List<string>> GetTimezones(CancellationToken token)
-        {
-            token.ThrowIfCancellationRequested();
-
-            var fullUrl = ApiBaseUrl + "timezone";
-
-            
-            var response = await _httpClient.GetAsync(fullUrl,token);
-            response.EnsureSuccessStatusCode();
-
-            token.ThrowIfCancellationRequested();
-            
-            var responseBody = await response.Content.ReadAsStringAsync(token);
-
-            return JsonSerializer.Deserialize<List<string>>(responseBody);
-            
-        }
+        
 
         public record Region(
             string ContinentCode,
