@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net.Http;
 using System.Text.Json;
 using System.Threading;
@@ -12,9 +13,13 @@ namespace Flow.Launcher.Plugin.TimeIn
         private const string ApiBaseUrl = "https://time.now/developer/api/";
         private HttpClient _httpClient;
 
-        public TimeNowApiClient(HttpClient httpClient)
+        private Dictionary<string,CachedValue<Dictionary<string,object>>> timezoneDictCache = new Dictionary<string, CachedValue<Dictionary<string,object>>>();
+        private TimeSpan? _cacheDuration;
+
+        public TimeNowApiClient(HttpClient httpClient, TimeSpan? cacheDuration = null)
         {
             _httpClient = httpClient;
+            _cacheDuration = cacheDuration;
         }
 
         public async Task<List<string>> GetTimezones(CancellationToken token)
@@ -33,9 +38,18 @@ namespace Flow.Launcher.Plugin.TimeIn
             return JsonSerializer.Deserialize<List<string>>(responseBody);
         }
 
-        private async Task<JsonDocument> GetTimezoneDoc(string timezone, CancellationToken token)
+        private async Task<Dictionary<string,object>> GetTimezoneDict(string timezone, CancellationToken token)
         {
-             token.ThrowIfCancellationRequested();
+            if (_cacheDuration is not null && timezoneDictCache.ContainsKey(timezone))
+            {
+                var cache = timezoneDictCache[timezone];
+                if (! cache.IsExpired())
+                {
+                    return cache.Value;
+                }
+            }
+
+            token.ThrowIfCancellationRequested();
 
             var fullUrl = $"{ApiBaseUrl}timezone/{timezone}";
             
@@ -46,21 +60,40 @@ namespace Flow.Launcher.Plugin.TimeIn
 
             token.ThrowIfCancellationRequested();
 
-            return JsonDocument.Parse(responseBody);
+            var dict = JsonSerializer.Deserialize<Dictionary<string, object>>(responseBody);
+
+            if (_cacheDuration is not null)
+            {
+                timezoneDictCache[timezone] = 
+                    new CachedValue<Dictionary<string,object>>(value:dict,expirationTime:_cacheDuration.Value);
+            }
+            return dict;
         }
 
-        public async Task<DateTimeOffset> GetTimezoneTime(string timezone, CancellationToken token)
+         public async Task<DateTimeOffset> GetTimezoneTime(string timezone, CancellationToken token)
         {
-            using var doc = await GetTimezoneDoc(timezone,token);
+            var dict = await GetTimezoneDict(timezone,token);
 
             token.ThrowIfCancellationRequested();
 
-            var timeString = doc.RootElement.GetProperty("datetime").GetString();
-
+            var timeString = dict["datetime"].ToString();
 
             var dateTime = DateTimeOffset.Parse(timeString);
 
             return dateTime;
+        }
+
+        public async Task<TimeSpan> GetTimezoneOffset(string timezone, CancellationToken token)
+        {
+            var dict = await GetTimezoneDict(timezone,token);
+
+            token.ThrowIfCancellationRequested();
+
+            var offsetString = dict["utc_offset"].ToString();
+
+            var offsetTime = TimeSpan.Parse(offsetString);
+
+            return offsetTime;
         }
     }
 }

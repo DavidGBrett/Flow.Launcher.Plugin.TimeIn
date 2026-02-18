@@ -33,7 +33,10 @@ namespace Flow.Launcher.Plugin.TimeIn
                 Timeout = TimeSpan.FromSeconds(30)
             };
 
-            _timeNowApiClient = new TimeNowApiClient(_httpClient);
+            _timeNowApiClient = new TimeNowApiClient(
+                httpClient: _httpClient,
+                cacheDuration: TimeSpan.FromMinutes(5)
+            );
 
             _mainActionKeyword = _context.CurrentPluginMetadata.ActionKeyword;
 
