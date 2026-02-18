@@ -108,7 +108,7 @@ namespace Flow.Launcher.Plugin.TimeIn
             foreach (var region in regions)
             {
                 var timezone = region.TimeZone;
-                var city = timezone.Split("/").Last();
+                var city = timezone.Split("/").Last().Replace("_"," ");
 
                 var newName = $"{region.CountryName} - {city}";
 
