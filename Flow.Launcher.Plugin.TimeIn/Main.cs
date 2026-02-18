@@ -67,14 +67,14 @@ namespace Flow.Launcher.Plugin.TimeIn
 
             var results = new List<Result>();
 
-            foreach (var timezone in _settings.SavedTimezones)
+            foreach (var savedTimezone in _settings.SavedTimezones)
             {
-                if (! timezone.ToLower().Contains(filter)) continue;
+                if (! savedTimezone.IanaTimeZone.ToLower().Contains(filter)) continue;
 
-                var dateTime = await GetTimezoneTime(timezone,token);
+                var dateTime = await GetTimezoneTime(savedTimezone.IanaTimeZone,token);
 
                 results.Add(new Result{
-                    Title = $"{timezone} - {dateTime:HH:mm}",
+                    Title = $"{savedTimezone.IanaTimeZone} - {dateTime:HH:mm}",
                 }); 
             }
 
@@ -112,11 +112,15 @@ namespace Flow.Launcher.Plugin.TimeIn
 
                 if (! newName.ToLower().Contains(filter)) continue;
 
+                var savedTimezone = new SavedTimezoneItem(
+                    ianaTimeZone:timezone
+                );
+
                 results.Add(new Result{
                     Title = newName,
                     Action =  _ =>
                     {
-                        _settings.SavedTimezones.Add(timezone);
+                        _settings.SavedTimezones.Add(savedTimezone);
                         _context.API.SaveSettingJsonStorage<Settings>();
 
                         _context.API.ChangeQuery("");
