@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using Flow.Launcher.Plugin;
 using System.Globalization;
 using System.Linq;
+using System.Windows.Controls;
 
 
 namespace Flow.Launcher.Plugin.TimeIn
@@ -15,18 +16,15 @@ namespace Flow.Launcher.Plugin.TimeIn
     public class TimeIn : IAsyncPlugin
     {
         private PluginInitContext _context;
+        private Settings _settings;
         private HttpClient _httpClient;
         private const string ApiBaseUrl = "https://time.now/developer/api/";
-
-        private List<string> _savedTimezones;
 
         public Task InitAsync(PluginInitContext context)
         {
             _context = context;
 
-            _savedTimezones = new List<string>{
-                "Asia/Shanghai"
-            };
+            _settings = _context.API.LoadSettingJsonStorage<Settings>();
 
             _httpClient = new HttpClient
             {
@@ -69,7 +67,7 @@ namespace Flow.Launcher.Plugin.TimeIn
 
             var results = new List<Result>();
 
-            foreach (var timezone in _savedTimezones)
+            foreach (var timezone in _settings.SavedTimezones)
             {
                 if (! timezone.ToLower().Contains(filter)) continue;
 
@@ -118,7 +116,9 @@ namespace Flow.Launcher.Plugin.TimeIn
                     Title = newName,
                     Action =  _ =>
                     {
-                        _savedTimezones.Add(timezone);
+                        _settings.SavedTimezones.Add(timezone);
+                        _context.API.SaveSettingJsonStorage<Settings>();
+
                         _context.API.ChangeQuery("");
                         return false;
                     }
