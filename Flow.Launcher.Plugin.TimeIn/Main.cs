@@ -20,6 +20,8 @@ namespace Flow.Launcher.Plugin.TimeIn
         private HttpClient _httpClient;
         private TimeNowApiClient _timeNowApiClient;
 
+        private string _mainActionKeyword;
+
         public Task InitAsync(PluginInitContext context)
         {
             _context = context;
@@ -32,6 +34,8 @@ namespace Flow.Launcher.Plugin.TimeIn
             };
 
             _timeNowApiClient = new TimeNowApiClient(_httpClient);
+
+            _mainActionKeyword = _context.CurrentPluginMetadata.ActionKeyword;
 
             return Task.CompletedTask;
         }
@@ -88,7 +92,7 @@ namespace Flow.Launcher.Plugin.TimeIn
                 Action = _ =>
                 {
                     // Change to the add group query
-                    _context.API.ChangeQuery($"{_context.CurrentPluginMetadata.ActionKeyword} add-",false);
+                    _context.API.ChangeQuery($"{_mainActionKeyword} add-",false);
                     return false;
                 }
             });
@@ -126,7 +130,7 @@ namespace Flow.Launcher.Plugin.TimeIn
                         _settings.SavedTimezones.Add(savedTimezone);
                         _context.API.SaveSettingJsonStorage<Settings>();
 
-                        _context.API.ChangeQuery(_context.CurrentPluginMetadata.ActionKeyword);
+                        _context.API.ChangeQuery(_mainActionKeyword);
                         return false;
                     }
                 }); 
