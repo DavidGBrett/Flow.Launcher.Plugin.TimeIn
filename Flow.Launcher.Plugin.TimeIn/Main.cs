@@ -13,7 +13,7 @@ using System.Windows.Controls;
 
 namespace Flow.Launcher.Plugin.TimeIn
 {
-    public class TimeIn : IAsyncPlugin
+    public class TimeIn : IAsyncPlugin, IContextMenu
     {
         private PluginInitContext _context;
         private Settings _settings;
@@ -75,6 +75,7 @@ namespace Flow.Launcher.Plugin.TimeIn
 
                 results.Add(new Result{
                     Title = $"{savedTimezone.IanaTimeZone} - {dateTime:HH:mm}",
+                    ContextData = savedTimezone
                 }); 
             }
 
@@ -253,6 +254,37 @@ namespace Flow.Launcher.Plugin.TimeIn
             }
 
             return regions;
+        }
+
+        public List<Result> LoadContextMenus(Result selectedResult)
+        {
+            var results = new List<Result>();
+
+            switch (selectedResult.ContextData)
+            {
+                case SavedTimezoneItem savedTimezoneItem:
+                {
+                    
+                    results.Add(new Result
+                    {
+                        Title = "Delete",
+                        SubTitle = "Delete this timezone item",
+                        Glyph = new GlyphInfo("sans-serif","X"),
+                        Action = _ =>
+                        {
+                            _settings.SavedTimezones.Remove(savedTimezoneItem);
+                            _context.API.SaveSettingJsonStorage<Settings>();
+                            _context.API.ReQuery();
+
+                            return false;
+                        }
+                    });
+
+                    break;
+                }
+            }
+            
+            return results;
         }
     }
 }
