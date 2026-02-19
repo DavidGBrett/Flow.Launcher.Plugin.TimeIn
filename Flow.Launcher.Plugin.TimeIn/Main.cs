@@ -126,16 +126,12 @@ namespace Flow.Launcher.Plugin.TimeIn
 
                     if (! title.ToLower().Contains(filter)) continue;
 
-                    var savedTimezone = new SavedTimezoneItem(
-                        ianaTimeZone:ianaTimeZone
-                    );
-
                     results.Add(new Result{
                         Title = title,
                         SubTitle = SubTitle,
                         Action =  _ =>
                         {
-                            _settings.SavedTimezones.Add(savedTimezone);
+                            _settings.SavedTimezones.Add(tzInfo);
                             _context.API.SaveSettingJsonStorage<Settings>();
 
                             _context.API.ChangeQuery(_mainActionKeyword);
@@ -154,7 +150,7 @@ namespace Flow.Launcher.Plugin.TimeIn
 
             switch (selectedResult.ContextData)
             {
-                case SavedTimezoneItem savedTimezoneItem:
+                case EnrichedTimeZoneInfo savedTimezone:
                 {
                     
                     results.Add(new Result
@@ -164,7 +160,7 @@ namespace Flow.Launcher.Plugin.TimeIn
                         Glyph = new GlyphInfo("sans-serif","X"),
                         Action = _ =>
                         {
-                            _settings.SavedTimezones.Remove(savedTimezoneItem);
+                            _settings.SavedTimezones.Remove(savedTimezone);
                             _context.API.SaveSettingJsonStorage<Settings>();
                             _context.API.ReQuery();
 
