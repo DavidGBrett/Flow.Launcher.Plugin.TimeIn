@@ -6,11 +6,11 @@ namespace Flow.Launcher.Plugin.TimeIn
 {
     public sealed class EnrichedTimeZoneInfo
     {
-        public readonly string IanaTimeZone;
-        public readonly string TerritoryName;
-        public readonly string TerritoryCode;
-        public readonly string SpecificLocation;
-        public readonly bool IsSoleTerritoryTimezone;
+        public string IanaTimeZone;
+        public string TerritoryName;
+        public string TerritoryCode;
+        public string SpecificLocation;
+        public bool IsSoleTerritoryTimezone;
 
         public EnrichedTimeZoneInfo(string ianaTimeZone, string territoryCode, bool isSoleTerritoryTimezone)
         {
