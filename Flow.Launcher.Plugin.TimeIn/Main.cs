@@ -19,8 +19,6 @@ namespace Flow.Launcher.Plugin.TimeIn
         private PluginInitContext _context;
         private Settings _settings;
         private HttpClient _httpClient;
-        private TimeNowApiClient _timeNowApiClient;
-
         private string _mainActionKeyword;
 
         public Task InitAsync(PluginInitContext context)
@@ -33,11 +31,6 @@ namespace Flow.Launcher.Plugin.TimeIn
             {
                 Timeout = TimeSpan.FromSeconds(30)
             };
-
-            _timeNowApiClient = new TimeNowApiClient(
-                httpClient: _httpClient,
-                cacheDuration: TimeSpan.FromMinutes(5)
-            );
 
             _mainActionKeyword = _context.CurrentPluginMetadata.ActionKeyword;
 
@@ -80,8 +73,6 @@ namespace Flow.Launcher.Plugin.TimeIn
             foreach (var savedTimezone in _settings.SavedTimezones)
             {
                 if (! savedTimezone.IanaTimeZone.ToLower().Contains(filter)) continue;
-
-                // var dateTime = await _timeNowApiClient.GetTimezoneTime(savedTimezone.IanaTimeZone,token);
 
                 string windowsTimeZone = TZConvert.IanaToWindows(savedTimezone.IanaTimeZone);
                 var timeZoneInfo = TimeZoneInfo.FindSystemTimeZoneById(windowsTimeZone);
