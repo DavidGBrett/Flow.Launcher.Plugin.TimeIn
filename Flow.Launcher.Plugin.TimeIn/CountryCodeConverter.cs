@@ -64,7 +64,7 @@ public static class CountryCodeConverter
         {"CU", "Cuba"},
         {"CW", "Curaçao"},
         {"CY", "Cyprus"},
-        {"CZ", "Czech Republic"},
+        {"CZ", "Czechia"},
         {"DK", "Denmark"},
         {"DJ", "Djibouti"},
         {"DM", "Dominica"},
