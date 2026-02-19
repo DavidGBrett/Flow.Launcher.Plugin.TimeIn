@@ -79,7 +79,9 @@ namespace Flow.Launcher.Plugin.TimeIn
                 var dateTime = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, timeZoneInfo);
 
                 results.Add(new Result{
-                    Title = $"{savedTimezone.IanaTimeZone} - {dateTime:HH:mm}",
+                    Title = $"{savedTimezone.TerritoryName} - {savedTimezone.SpecificLocation}",
+                    SubTitle = $"{dateTime:HH:mm}",
+                    Glyph = new GlyphInfo("sans-serif",$"{dateTime:HH}"),
                     ContextData = savedTimezone
                 }); 
             }
