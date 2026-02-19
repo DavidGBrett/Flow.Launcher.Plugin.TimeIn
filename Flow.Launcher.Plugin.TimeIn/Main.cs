@@ -105,121 +105,41 @@ namespace Flow.Launcher.Plugin.TimeIn
 
             var results = new List<Result>();
             
-            List<Region> regions = await GetTimezoneCountryMappings(token);
+            var territoriesToTimeZones = TZConvert.GetIanaTimeZoneNamesByTerritory();
 
             token.ThrowIfCancellationRequested();
 
-            foreach (var region in regions)
+            foreach (var territoryCode in territoriesToTimeZones.Keys)
             {
-                var timezone = region.TimeZone;
-                var city = timezone.Split("/").Last().Replace("_"," ");
+                foreach (var ianaTimeZone in territoriesToTimeZones[territoryCode])
+                {
+                    var city = ianaTimeZone.Split("/").Last().Replace("_"," ");
 
-                var newName = $"{region.CountryName} - {city}";
+                    var territoryName = CountryCodeConverter.GetCountryName(territoryCode);
 
-                if (! newName.ToLower().Contains(filter)) continue;
+                    var newName = $"{territoryName} - {city}";
 
-                var savedTimezone = new SavedTimezoneItem(
-                    ianaTimeZone:timezone
-                );
+                    if (! newName.ToLower().Contains(filter)) continue;
 
-                results.Add(new Result{
-                    Title = newName,
-                    Action =  _ =>
-                    {
-                        _settings.SavedTimezones.Add(savedTimezone);
-                        _context.API.SaveSettingJsonStorage<Settings>();
+                    var savedTimezone = new SavedTimezoneItem(
+                        ianaTimeZone:ianaTimeZone
+                    );
 
-                        _context.API.ChangeQuery(_mainActionKeyword);
-                        return false;
-                    }
-                }); 
+                    results.Add(new Result{
+                        Title = newName,
+                        Action =  _ =>
+                        {
+                            _settings.SavedTimezones.Add(savedTimezone);
+                            _context.API.SaveSettingJsonStorage<Settings>();
+
+                            _context.API.ChangeQuery(_mainActionKeyword);
+                            return false;
+                        }
+                    }); 
+                }
             }
 
             return results;
-        }
-
-       
-
-        
-
-        public record Region(
-            string ContinentCode,
-            string CountryCode,
-            string CountryName,
-            string TimeZone
-        );
-
-        public async Task<List<Region>> GetTimezoneCountryMappings(CancellationToken token)
-        {
-            token.ThrowIfCancellationRequested();
-
-            var single_timezone_exceptions = new Dictionary<string,string>{
-                ["China"] = "Asia/Shanghai",
-                ["Kazakhstan"] = "Asia/Almaty",
-                ["Argentina"] = "America/Argentina/Buenos_Aires",
-                ["Uzbekistan"] = "Asia/Samarkand"
-            };
-
-            const string url = "https://raw.githubusercontent.com/bxparks/tzplus/refs/heads/master/data/country_timezones.txt";
-
-            var response = await _httpClient.GetAsync(url,token);
-            response.EnsureSuccessStatusCode();
-
-            token.ThrowIfCancellationRequested();
-
-            var responseBody = await response.Content.ReadAsStringAsync(token);
-            
-            var regions = new List<Region>();
-
-            using var reader = new StringReader(responseBody);
-
-            string? line;
-            while ((line = reader.ReadLine()) != null)
-            {
-                line = line.Trim();
-
-                // Skip blank lines
-                if (string.IsNullOrEmpty(line))
-                    continue;
-
-                // Skip comments
-                if (line.StartsWith("#"))
-                    continue;
-
-                // Remove inline comments
-                var hashIndex = line.IndexOf('#');
-                if (hashIndex >= 0)
-                    line = line[..hashIndex].Trim();
-
-                var parts = line.Split(
-                    ' ',
-                    StringSplitOptions.RemoveEmptyEntries
-                );
-
-                if (parts.Length < 3)
-                    continue; // malformed line
-
-                var name = CountryCodeConverter.GetCountryName(parts[1]);
-                var timezone = parts[2];
-
-                // skip extra city timezones for countries that should only have 1
-                if (
-                    name != null
-                    &&
-                    single_timezone_exceptions.ContainsKey(name) 
-                    && 
-                    single_timezone_exceptions[name] != timezone
-                ) continue;
-
-                regions.Add(new Region(
-                    parts[0],
-                    parts[1],
-                    name,
-                    timezone
-                ));
-            }
-
-            return regions;
         }
 
         public List<Result> LoadContextMenus(Result selectedResult)
