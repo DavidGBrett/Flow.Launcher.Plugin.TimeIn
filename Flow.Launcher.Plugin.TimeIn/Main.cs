@@ -9,6 +9,7 @@ using Flow.Launcher.Plugin;
 using System.Globalization;
 using System.Linq;
 using System.Windows.Controls;
+using TimeZoneConverter;
 
 
 namespace Flow.Launcher.Plugin.TimeIn
@@ -80,7 +81,11 @@ namespace Flow.Launcher.Plugin.TimeIn
             {
                 if (! savedTimezone.IanaTimeZone.ToLower().Contains(filter)) continue;
 
-                var dateTime = await _timeNowApiClient.GetTimezoneTime(savedTimezone.IanaTimeZone,token);
+                // var dateTime = await _timeNowApiClient.GetTimezoneTime(savedTimezone.IanaTimeZone,token);
+
+                string windowsTimeZone = TZConvert.IanaToWindows(savedTimezone.IanaTimeZone);
+                var timeZoneInfo = TimeZoneInfo.FindSystemTimeZoneById(windowsTimeZone);
+                var dateTime = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, timeZoneInfo);
 
                 results.Add(new Result{
                     Title = $"{savedTimezone.IanaTimeZone} - {dateTime:HH:mm}",
