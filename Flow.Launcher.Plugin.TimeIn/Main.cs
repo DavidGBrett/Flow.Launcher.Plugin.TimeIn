@@ -111,9 +111,15 @@ namespace Flow.Launcher.Plugin.TimeIn
 
             foreach (var territoryCode in territoriesToTimeZones.Keys)
             {
-                foreach (var ianaTimeZone in territoriesToTimeZones[territoryCode])
+                var timeZones = territoriesToTimeZones[territoryCode];
+
+                foreach (var ianaTimeZone in timeZones)
                 {
-                    var tzInfo = new EnrichedTimeZoneInfo(ianaTimeZone,territoryCode);
+                    var tzInfo = new EnrichedTimeZoneInfo(
+                        ianaTimeZone:ianaTimeZone,
+                        territoryCode:territoryCode,
+                        isSoleTerritoryTimezone: timeZones.Count == 1
+                    );
 
                     var title = $"{tzInfo.TerritoryName} - {tzInfo.SpecificLocation}";
                     var SubTitle = $"{tzInfo.TerritoryCode} - {tzInfo.IanaTimeZone}";
