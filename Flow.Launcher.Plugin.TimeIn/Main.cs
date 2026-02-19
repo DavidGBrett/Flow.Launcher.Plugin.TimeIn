@@ -9,6 +9,7 @@ using Flow.Launcher.Plugin;
 using System.Globalization;
 using System.Linq;
 using System.Windows.Controls;
+using TimeZoneConverter;
 
 
 namespace Flow.Launcher.Plugin.TimeIn
@@ -18,8 +19,6 @@ namespace Flow.Launcher.Plugin.TimeIn
         private PluginInitContext _context;
         private Settings _settings;
         private HttpClient _httpClient;
-        private TimeNowApiClient _timeNowApiClient;
-
         private string _mainActionKeyword;
 
         public Task InitAsync(PluginInitContext context)
@@ -32,11 +31,6 @@ namespace Flow.Launcher.Plugin.TimeIn
             {
                 Timeout = TimeSpan.FromSeconds(30)
             };
-
-            _timeNowApiClient = new TimeNowApiClient(
-                httpClient: _httpClient,
-                cacheDuration: TimeSpan.FromMinutes(5)
-            );
 
             _mainActionKeyword = _context.CurrentPluginMetadata.ActionKeyword;
 
@@ -80,7 +74,9 @@ namespace Flow.Launcher.Plugin.TimeIn
             {
                 if (! savedTimezone.IanaTimeZone.ToLower().Contains(filter)) continue;
 
-                var dateTime = await _timeNowApiClient.GetTimezoneTime(savedTimezone.IanaTimeZone,token);
+                string windowsTimeZone = TZConvert.IanaToWindows(savedTimezone.IanaTimeZone);
+                var timeZoneInfo = TimeZoneInfo.FindSystemTimeZoneById(windowsTimeZone);
+                var dateTime = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, timeZoneInfo);
 
                 results.Add(new Result{
                     Title = $"{savedTimezone.IanaTimeZone} - {dateTime:HH:mm}",
