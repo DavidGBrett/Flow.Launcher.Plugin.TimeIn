@@ -113,20 +113,20 @@ namespace Flow.Launcher.Plugin.TimeIn
             {
                 foreach (var ianaTimeZone in territoriesToTimeZones[territoryCode])
                 {
-                    var city = ianaTimeZone.Split("/").Last().Replace("_"," ");
+                    var tzInfo = new EnrichedTimeZoneInfo(ianaTimeZone,territoryCode);
 
-                    var territoryName = CountryCodeConverter.GetCountryName(territoryCode);
+                    var title = $"{tzInfo.TerritoryName} - {tzInfo.SpecificLocation}";
+                    var SubTitle = $"{tzInfo.TerritoryCode} - {tzInfo.IanaTimeZone}";
 
-                    var newName = $"{territoryName} - {city}";
-
-                    if (! newName.ToLower().Contains(filter)) continue;
+                    if (! title.ToLower().Contains(filter)) continue;
 
                     var savedTimezone = new SavedTimezoneItem(
                         ianaTimeZone:ianaTimeZone
                     );
 
                     results.Add(new Result{
-                        Title = newName,
+                        Title = title,
+                        SubTitle = SubTitle,
                         Action =  _ =>
                         {
                             _settings.SavedTimezones.Add(savedTimezone);
