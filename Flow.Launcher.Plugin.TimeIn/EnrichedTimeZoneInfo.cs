@@ -1,9 +1,10 @@
+using System;
 using System.Linq;
 using TimeZoneConverter;
 
 namespace Flow.Launcher.Plugin.TimeIn
 {
-    public readonly struct EnrichedTimeZoneInfo
+    public sealed class EnrichedTimeZoneInfo
     {
         public readonly string IanaTimeZone;
         public readonly string TerritoryName;
@@ -13,6 +14,11 @@ namespace Flow.Launcher.Plugin.TimeIn
 
         public EnrichedTimeZoneInfo(string ianaTimeZone, string territoryCode, bool isSoleTerritoryTimezone)
         {
+            if(ianaTimeZone is null)
+            {
+                throw new ArgumentNullException("ianaTimeZone cannot be null");
+            }
+
             IanaTimeZone = ianaTimeZone;
             SpecificLocation = ianaTimeZone.Split("/").Last().Replace("_"," ");
 
