@@ -252,7 +252,9 @@ public static class CountryCodeConverter
         {"EH", "Western Sahara"},
         {"YE", "Yemen"},
         {"ZM", "Zambia"},
-        {"ZW", "Zimbabwe"}
+        {"ZW", "Zimbabwe"},
+        {"MK", "North Macedonia"},
+        {"XK", "Kosovo"}
     };
 
     public static string GetCountryName(string code)
