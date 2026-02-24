@@ -20,6 +20,7 @@ namespace Flow.Launcher.Plugin.TimeIn
         private Settings _settings;
         private HttpClient _httpClient;
         private string _mainActionKeyword;
+        private EnrichedTimeZoneProvider enrichedTZProvider;
 
         public Task InitAsync(PluginInitContext context)
         {
@@ -33,6 +34,10 @@ namespace Flow.Launcher.Plugin.TimeIn
             };
 
             _mainActionKeyword = _context.CurrentPluginMetadata.ActionKeyword;
+
+            enrichedTZProvider = new EnrichedTimeZoneProvider(
+                TimeSpan.FromMinutes(1)
+            );
 
             return Task.CompletedTask;
         }
@@ -70,17 +75,21 @@ namespace Flow.Launcher.Plugin.TimeIn
 
             var results = new List<Result>();
 
-            foreach (var savedTimezone in _settings.SavedTimezones)
+            foreach (var ianaTimeZone in _settings.SavedTimezones)
             {
-                if (! savedTimezone.IanaTimeZone.ToLower().Contains(filter)) continue;
+                var enrichedTimezone = enrichedTZProvider.GetEnrichedTimeZone(ianaTimeZone);
 
-                string windowsTimeZone = TZConvert.IanaToWindows(savedTimezone.IanaTimeZone);
+                if (! enrichedTimezone.IanaTimeZone.ToLower().Contains(filter)) continue;
+
+                string windowsTimeZone = TZConvert.IanaToWindows(enrichedTimezone.IanaTimeZone);
                 var timeZoneInfo = TimeZoneInfo.FindSystemTimeZoneById(windowsTimeZone);
                 var dateTime = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, timeZoneInfo);
 
                 results.Add(new Result{
-                    Title = $"{savedTimezone.IanaTimeZone} - {dateTime:HH:mm}",
-                    ContextData = savedTimezone
+                    Title = $"{enrichedTimezone.TerritoryName} - {enrichedTimezone.SpecificLocation}",
+                    SubTitle = $"{dateTime:HH:mm}",
+                    Glyph = new GlyphInfo("sans-serif",$"{dateTime:HH}"),
+                    ContextData = enrichedTimezone
                 }); 
             }
 
@@ -105,38 +114,27 @@ namespace Flow.Launcher.Plugin.TimeIn
 
             var results = new List<Result>();
             
-            var territoriesToTimeZones = TZConvert.GetIanaTimeZoneNamesByTerritory();
-
             token.ThrowIfCancellationRequested();
 
-            foreach (var territoryCode in territoriesToTimeZones.Keys)
+            foreach (var tzInfo in enrichedTZProvider.GetAll())
             {
-                foreach (var ianaTimeZone in territoriesToTimeZones[territoryCode])
-                {
-                    var city = ianaTimeZone.Split("/").Last().Replace("_"," ");
+                var title = $"{tzInfo.TerritoryName} - {tzInfo.SpecificLocation}";
+                var SubTitle = $"{tzInfo.TerritoryCode} - {tzInfo.IanaTimeZone}";
 
-                    var territoryName = CountryCodeConverter.GetCountryName(territoryCode);
+                if (! title.ToLower().Contains(filter)) continue;
 
-                    var newName = $"{territoryName} - {city}";
+                results.Add(new Result{
+                    Title = title,
+                    SubTitle = SubTitle,
+                    Action =  _ =>
+                    {
+                        _settings.SavedTimezones.Add(tzInfo.IanaTimeZone);
+                        _context.API.SaveSettingJsonStorage<Settings>();
 
-                    if (! newName.ToLower().Contains(filter)) continue;
-
-                    var savedTimezone = new SavedTimezoneItem(
-                        ianaTimeZone:ianaTimeZone
-                    );
-
-                    results.Add(new Result{
-                        Title = newName,
-                        Action =  _ =>
-                        {
-                            _settings.SavedTimezones.Add(savedTimezone);
-                            _context.API.SaveSettingJsonStorage<Settings>();
-
-                            _context.API.ChangeQuery(_mainActionKeyword);
-                            return false;
-                        }
-                    }); 
-                }
+                        _context.API.ChangeQuery(_mainActionKeyword);
+                        return false;
+                    }
+                }); 
             }
 
             return results;
@@ -148,7 +146,7 @@ namespace Flow.Launcher.Plugin.TimeIn
 
             switch (selectedResult.ContextData)
             {
-                case SavedTimezoneItem savedTimezoneItem:
+                case EnrichedTimeZoneInfo savedTimezone:
                 {
                     
                     results.Add(new Result
@@ -158,7 +156,7 @@ namespace Flow.Launcher.Plugin.TimeIn
                         Glyph = new GlyphInfo("sans-serif","X"),
                         Action = _ =>
                         {
-                            _settings.SavedTimezones.Remove(savedTimezoneItem);
+                            _settings.SavedTimezones.Remove(savedTimezone.IanaTimeZone);
                             _context.API.SaveSettingJsonStorage<Settings>();
                             _context.API.ReQuery();
 
