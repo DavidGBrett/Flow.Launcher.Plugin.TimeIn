@@ -20,8 +20,7 @@ namespace Flow.Launcher.Plugin.TimeIn
         private Settings _settings;
         private HttpClient _httpClient;
         private string _mainActionKeyword;
-        
-        private Dictionary<string,EnrichedTimeZoneInfo> timezoneToEnriched;
+        private EnrichedTimeZoneProvider enrichedTZProvider;
 
         public Task InitAsync(PluginInitContext context)
         {
@@ -36,23 +35,7 @@ namespace Flow.Launcher.Plugin.TimeIn
 
             _mainActionKeyword = _context.CurrentPluginMetadata.ActionKeyword;
 
-            var territoriesToTimeZones = TZConvert.GetIanaTimeZoneNamesByTerritory();
-            
-            timezoneToEnriched = new Dictionary<string, EnrichedTimeZoneInfo>();
-            foreach (var territoryCode in territoriesToTimeZones.Keys)
-            {
-                var timeZones = territoriesToTimeZones[territoryCode];
-
-                foreach (var ianaTimeZone in timeZones)
-                {
-                    timezoneToEnriched[ianaTimeZone] = 
-                        new EnrichedTimeZoneInfo(
-                            ianaTimeZone:ianaTimeZone,
-                            territoryCode:territoryCode,
-                            isSoleTerritoryTimezone: timeZones.Count == 1
-                        );
-                }
-            }
+            enrichedTZProvider = new EnrichedTimeZoneProvider();
 
             return Task.CompletedTask;
         }
@@ -92,7 +75,7 @@ namespace Flow.Launcher.Plugin.TimeIn
 
             foreach (var ianaTimeZone in _settings.SavedTimezones)
             {
-                var enrichedTimezone = timezoneToEnriched[ianaTimeZone];
+                var enrichedTimezone = enrichedTZProvider.GetEnrichedTimeZone(ianaTimeZone);
 
                 if (! enrichedTimezone.IanaTimeZone.ToLower().Contains(filter)) continue;
 
@@ -131,7 +114,7 @@ namespace Flow.Launcher.Plugin.TimeIn
             
             token.ThrowIfCancellationRequested();
 
-            foreach (var tzInfo in timezoneToEnriched.Values)
+            foreach (var tzInfo in enrichedTZProvider.GetAll())
             {
                 var title = $"{tzInfo.TerritoryName} - {tzInfo.SpecificLocation}";
                 var SubTitle = $"{tzInfo.TerritoryCode} - {tzInfo.IanaTimeZone}";
