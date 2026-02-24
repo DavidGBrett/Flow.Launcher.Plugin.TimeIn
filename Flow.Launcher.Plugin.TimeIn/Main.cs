@@ -136,6 +136,12 @@ namespace Flow.Launcher.Plugin.TimeIn
 
             foreach (var tzInfo in enrichedTZProvider.GetAll())
             {
+                // skip if already saved
+                if (_settings.SavedTimezones.Contains(tzInfo.IanaTimeZone))
+                {
+                    continue;
+                }
+
                 try{
                     var timeZoneTime = GetTimeZoneTime(enrichedTimezone:tzInfo);
 
