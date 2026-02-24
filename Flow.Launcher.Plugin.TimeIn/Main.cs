@@ -35,7 +35,9 @@ namespace Flow.Launcher.Plugin.TimeIn
 
             _mainActionKeyword = _context.CurrentPluginMetadata.ActionKeyword;
 
-            enrichedTZProvider = new EnrichedTimeZoneProvider();
+            enrichedTZProvider = new EnrichedTimeZoneProvider(
+                TimeSpan.FromMinutes(1)
+            );
 
             return Task.CompletedTask;
         }
