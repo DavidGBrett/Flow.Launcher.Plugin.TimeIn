@@ -88,7 +88,7 @@ namespace Flow.Launcher.Plugin.TimeIn
 
             var results = new List<Result>();
 
-            foreach (var ianaTimeZone in _settings.SavedTimezones)
+            foreach (var ianaTimeZone in _settings.SavedTimeZones)
             {
                 var enrichedTimezone = enrichedTZProvider.GetEnrichedTimeZone(ianaTimeZone);
 
@@ -137,7 +137,7 @@ namespace Flow.Launcher.Plugin.TimeIn
             foreach (var tzInfo in enrichedTZProvider.GetAll())
             {
                 // skip if already saved
-                if (_settings.SavedTimezones.Contains(tzInfo.IanaTimeZone))
+                if (_settings.SavedTimeZones.Contains(tzInfo.IanaTimeZone))
                 {
                     continue;
                 }
@@ -158,7 +158,7 @@ namespace Flow.Launcher.Plugin.TimeIn
                         Glyph = glyph,
                         Action =  _ =>
                         {
-                            _settings.SavedTimezones.Add(tzInfo.IanaTimeZone);
+                            _settings.SavedTimeZones.Add(tzInfo.IanaTimeZone);
                             _context.API.SaveSettingJsonStorage<Settings>();
                     
                             _context.API.ChangeQuery(_mainActionKeyword);
@@ -192,7 +192,7 @@ namespace Flow.Launcher.Plugin.TimeIn
                         Glyph = new GlyphInfo("sans-serif","X"),
                         Action = _ =>
                         {
-                            _settings.SavedTimezones.Remove(savedTimezone.IanaTimeZone);
+                            _settings.SavedTimeZones.Remove(savedTimezone.IanaTimeZone);
                             _context.API.SaveSettingJsonStorage<Settings>();
                             _context.API.ReQuery();
 

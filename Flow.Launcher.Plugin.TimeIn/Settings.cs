@@ -6,6 +6,6 @@ namespace Flow.Launcher.Plugin.TimeIn
 {
     public class Settings : BaseModel
     {
-        public HashSet<string> SavedTimezones {set;get;} = new HashSet<string>();
+        public HashSet<string> SavedTimeZones {set;get;} = new HashSet<string>();
     }
 }
