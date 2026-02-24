@@ -64,6 +64,16 @@ namespace Flow.Launcher.Plugin.TimeIn
             return results;
         }
 
+        private (string title, string subTitle, GlyphInfo glyph) 
+        FormatTimezoneDisplayInfo(EnrichedTimeZoneInfo enrichedTimeZone, DateTime timeZoneTime)
+        {
+            return (
+                title: $"{enrichedTimeZone.TerritoryName} - {enrichedTimeZone.SpecificLocation}",
+                subTitle: $"{timeZoneTime:HH:mm}",
+                glyph: new GlyphInfo("sans-serif", $"{timeZoneTime:HH}")
+            );
+        }
+
         private DateTime GetTimeZoneTime(EnrichedTimeZoneInfo enrichedTimezone)
         {
             string windowsTimeZone = TZConvert.IanaToWindows(enrichedTimezone.IanaTimeZone);
@@ -85,13 +95,20 @@ namespace Flow.Launcher.Plugin.TimeIn
                 if (! enrichedTimezone.IanaTimeZone.ToLower().Contains(filter)) continue;
 
                 var dateTime = GetTimeZoneTime(enrichedTimezone:enrichedTimezone);
+                var (title, subTitle, glyph) = FormatTimezoneDisplayInfo(
+                    enrichedTimeZone:enrichedTimezone,
+                    timeZoneTime:dateTime
+                );
 
-                results.Add(new Result{
-                    Title = $"{enrichedTimezone.TerritoryName} - {enrichedTimezone.SpecificLocation}",
-                    SubTitle = $"{dateTime:HH:mm}",
-                    Glyph = new GlyphInfo("sans-serif",$"{dateTime:HH}"),
-                    ContextData = enrichedTimezone
-                }); 
+                results.Add(
+                    new Result
+                    {
+                        Title = title,
+                        SubTitle = subTitle,
+                        Glyph = glyph,
+                        ContextData = enrichedTimezone
+                    }
+                ); 
             }
 
             results.Add(new Result{
@@ -119,23 +136,35 @@ namespace Flow.Launcher.Plugin.TimeIn
 
             foreach (var tzInfo in enrichedTZProvider.GetAll())
             {
-                var title = $"{tzInfo.TerritoryName} - {tzInfo.SpecificLocation}";
-                var SubTitle = $"{tzInfo.TerritoryCode} - {tzInfo.IanaTimeZone}";
+                try{
+                    var timeZoneTime = GetTimeZoneTime(enrichedTimezone:tzInfo);
 
-                if (! title.ToLower().Contains(filter)) continue;
+                    var (title, subTitle, glyph) = FormatTimezoneDisplayInfo(
+                        enrichedTimeZone:tzInfo,
+                        timeZoneTime:timeZoneTime
+                    );
 
-                results.Add(new Result{
-                    Title = title,
-                    SubTitle = SubTitle,
-                    Action =  _ =>
-                    {
-                        _settings.SavedTimezones.Add(tzInfo.IanaTimeZone);
-                        _context.API.SaveSettingJsonStorage<Settings>();
+                    if (! title.ToLower().Contains(filter)) continue;
 
-                        _context.API.ChangeQuery(_mainActionKeyword);
-                        return false;
-                    }
-                }); 
+                    results.Add(new Result{
+                        Title = title,
+                        SubTitle = subTitle,
+                        Glyph = glyph,
+                        Action =  _ =>
+                        {
+                            _settings.SavedTimezones.Add(tzInfo.IanaTimeZone);
+                            _context.API.SaveSettingJsonStorage<Settings>();
+                    
+                            _context.API.ChangeQuery(_mainActionKeyword);
+                            return false;
+                        }
+                    }); 
+                }
+                catch (InvalidTimeZoneException)
+                {
+                    continue;
+                }
+                
             }
 
             return results;
