@@ -114,7 +114,7 @@ namespace Flow.Launcher.Plugin.TimeIn
             results.Add(new Result{
                 Title = "Add Timezone",
                 Glyph = new GlyphInfo("sans-serif","＋"),
-                Score = -100, // Low score to appear at the bottom (make sure real matches come first)
+                Score = 100, // High score so it appears at the top of results
                 Action = _ =>
                 {
                     // Change to the add group query
