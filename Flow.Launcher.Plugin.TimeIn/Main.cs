@@ -20,6 +20,8 @@ namespace Flow.Launcher.Plugin.TimeIn
         private Settings _settings;
         private HttpClient _httpClient;
         private string _mainActionKeyword;
+        
+        private Dictionary<string,EnrichedTimeZoneInfo> timezoneToEnriched;
 
         public Task InitAsync(PluginInitContext context)
         {
@@ -33,6 +35,24 @@ namespace Flow.Launcher.Plugin.TimeIn
             };
 
             _mainActionKeyword = _context.CurrentPluginMetadata.ActionKeyword;
+
+            var territoriesToTimeZones = TZConvert.GetIanaTimeZoneNamesByTerritory();
+            
+            timezoneToEnriched = new Dictionary<string, EnrichedTimeZoneInfo>();
+            foreach (var territoryCode in territoriesToTimeZones.Keys)
+            {
+                var timeZones = territoriesToTimeZones[territoryCode];
+
+                foreach (var ianaTimeZone in timeZones)
+                {
+                    timezoneToEnriched[ianaTimeZone] = 
+                        new EnrichedTimeZoneInfo(
+                            ianaTimeZone:ianaTimeZone,
+                            territoryCode:territoryCode,
+                            isSoleTerritoryTimezone: timeZones.Count == 1
+                        );
+                }
+            }
 
             return Task.CompletedTask;
         }
@@ -107,40 +127,27 @@ namespace Flow.Launcher.Plugin.TimeIn
 
             var results = new List<Result>();
             
-            var territoriesToTimeZones = TZConvert.GetIanaTimeZoneNamesByTerritory();
-
             token.ThrowIfCancellationRequested();
 
-            foreach (var territoryCode in territoriesToTimeZones.Keys)
+            foreach (var tzInfo in timezoneToEnriched.Values)
             {
-                var timeZones = territoriesToTimeZones[territoryCode];
+                var title = $"{tzInfo.TerritoryName} - {tzInfo.SpecificLocation}";
+                var SubTitle = $"{tzInfo.TerritoryCode} - {tzInfo.IanaTimeZone}";
 
-                foreach (var ianaTimeZone in timeZones)
-                {
-                    var tzInfo = new EnrichedTimeZoneInfo(
-                        ianaTimeZone:ianaTimeZone,
-                        territoryCode:territoryCode,
-                        isSoleTerritoryTimezone: timeZones.Count == 1
-                    );
+                if (! title.ToLower().Contains(filter)) continue;
 
-                    var title = $"{tzInfo.TerritoryName} - {tzInfo.SpecificLocation}";
-                    var SubTitle = $"{tzInfo.TerritoryCode} - {tzInfo.IanaTimeZone}";
+                results.Add(new Result{
+                    Title = title,
+                    SubTitle = SubTitle,
+                    Action =  _ =>
+                    {
+                        _settings.SavedTimezones.Add(tzInfo);
+                        _context.API.SaveSettingJsonStorage<Settings>();
 
-                    if (! title.ToLower().Contains(filter)) continue;
-
-                    results.Add(new Result{
-                        Title = title,
-                        SubTitle = SubTitle,
-                        Action =  _ =>
-                        {
-                            _settings.SavedTimezones.Add(tzInfo);
-                            _context.API.SaveSettingJsonStorage<Settings>();
-
-                            _context.API.ChangeQuery(_mainActionKeyword);
-                            return false;
-                        }
-                    }); 
-                }
+                        _context.API.ChangeQuery(_mainActionKeyword);
+                        return false;
+                    }
+                }); 
             }
 
             return results;
