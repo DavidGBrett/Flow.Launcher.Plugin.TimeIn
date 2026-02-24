@@ -65,7 +65,7 @@ namespace Flow.Launcher.Plugin.TimeIn
         }
 
         private (string title, string subTitle, GlyphInfo glyph) 
-        FormatTimezoneDisplayInfo(EnrichedTimeZoneInfo enrichedTimeZone, DateTime timeZoneTime)
+        FormatTimeZoneDisplayInfo(EnrichedTimeZoneInfo enrichedTimeZone, DateTime timeZoneTime)
         {
             return (
                 title: $"{enrichedTimeZone.TerritoryName} - {enrichedTimeZone.SpecificLocation}",
@@ -93,7 +93,7 @@ namespace Flow.Launcher.Plugin.TimeIn
                 var enrichedTimezone = enrichedTZProvider.GetEnrichedTimeZone(ianaTimeZone);
 
                 var dateTime = GetTimeZoneTime(enrichedTimezone:enrichedTimezone);
-                var (title, subTitle, glyph) = FormatTimezoneDisplayInfo(
+                var (title, subTitle, glyph) = FormatTimeZoneDisplayInfo(
                     enrichedTimeZone:enrichedTimezone,
                     timeZoneTime:dateTime
                 );
@@ -139,7 +139,7 @@ namespace Flow.Launcher.Plugin.TimeIn
                 try{
                     var timeZoneTime = GetTimeZoneTime(enrichedTimezone:tzInfo);
 
-                    var (title, subTitle, glyph) = FormatTimezoneDisplayInfo(
+                    var (title, subTitle, glyph) = FormatTimeZoneDisplayInfo(
                         enrichedTimeZone:tzInfo,
                         timeZoneTime:timeZoneTime
                     );
