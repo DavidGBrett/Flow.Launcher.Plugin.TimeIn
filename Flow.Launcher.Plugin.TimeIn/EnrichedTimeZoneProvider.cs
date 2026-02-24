@@ -6,7 +6,7 @@ namespace Flow.Launcher.Plugin.TimeIn
 {
     public class EnrichedTimeZoneProvider
     {
-        private Dictionary<string,EnrichedTimeZoneInfo> timezoneToEnriched;
+        private Dictionary<string,EnrichedTimeZoneInfo> _timezoneToEnriched;
         private Func<DateTime> _currentTimeProvider;
         private DateTime _lastRefreshTime;
         private readonly TimeSpan? _refreshInterval;
@@ -20,7 +20,7 @@ namespace Flow.Launcher.Plugin.TimeIn
 
             _refreshInterval = refreshInterval;
 
-            refresh();
+            Refresh();
         }
 
         private bool isExpired() => _currentTimeProvider() - _lastRefreshTime > _refreshInterval;
@@ -29,11 +29,11 @@ namespace Flow.Launcher.Plugin.TimeIn
         {
             if (isExpired())
             {
-                refresh();
+                Refresh();
             }
         }
 
-        public void refresh()
+        public void Refresh()
         {
             if (! isExpired()) return;
 
@@ -56,20 +56,20 @@ namespace Flow.Launcher.Plugin.TimeIn
                 }
             }
 
-            timezoneToEnriched = newDict;
+            _timezoneToEnriched = newDict;
             _lastRefreshTime = _currentTimeProvider();
         }
 
         public EnrichedTimeZoneInfo GetEnrichedTimeZone(string ianaTimeZone)
         {
             RefreshIfExpired();
-            return timezoneToEnriched[ianaTimeZone];
+            return _timezoneToEnriched[ianaTimeZone];
         }
 
         public IReadOnlyCollection<EnrichedTimeZoneInfo> GetAll()
         {
             RefreshIfExpired();
-            return timezoneToEnriched.Values;
+            return _timezoneToEnriched.Values;
         }
     }
 }
