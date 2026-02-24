@@ -118,7 +118,7 @@ namespace Flow.Launcher.Plugin.TimeIn
                 Action = _ =>
                 {
                     // Change to the add group query
-                    _context.API.ChangeQuery($"{_mainActionKeyword} add-",false);
+                    _context.API.ChangeQuery($"{_mainActionKeyword} add-{filter}",false);
                     return false;
                 }
             });
