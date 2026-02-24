@@ -92,13 +92,13 @@ namespace Flow.Launcher.Plugin.TimeIn
             {
                 var enrichedTimezone = enrichedTZProvider.GetEnrichedTimeZone(ianaTimeZone);
 
-                if (! enrichedTimezone.IanaTimeZone.ToLower().Contains(filter)) continue;
-
                 var dateTime = GetTimeZoneTime(enrichedTimezone:enrichedTimezone);
                 var (title, subTitle, glyph) = FormatTimezoneDisplayInfo(
                     enrichedTimeZone:enrichedTimezone,
                     timeZoneTime:dateTime
                 );
+
+                if (! title.ToLower().Contains(filter)) continue;
 
                 results.Add(
                     new Result
