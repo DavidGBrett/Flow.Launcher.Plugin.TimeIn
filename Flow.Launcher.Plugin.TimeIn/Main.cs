@@ -64,6 +64,15 @@ namespace Flow.Launcher.Plugin.TimeIn
             return results;
         }
 
+        private DateTime GetTimeZoneTime(EnrichedTimeZoneInfo enrichedTimezone)
+        {
+            string windowsTimeZone = TZConvert.IanaToWindows(enrichedTimezone.IanaTimeZone);
+            TimeZoneInfo timeZoneInfo = TimeZoneInfo.FindSystemTimeZoneById(windowsTimeZone);
+            DateTime timeZoneTime = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, timeZoneInfo);
+
+            return timeZoneTime;
+        }
+
         private async Task<List<Result>> GetSavedTimezonesResults(string filter, CancellationToken token){
             token.ThrowIfCancellationRequested();
 
@@ -75,9 +84,7 @@ namespace Flow.Launcher.Plugin.TimeIn
 
                 if (! enrichedTimezone.IanaTimeZone.ToLower().Contains(filter)) continue;
 
-                string windowsTimeZone = TZConvert.IanaToWindows(enrichedTimezone.IanaTimeZone);
-                var timeZoneInfo = TimeZoneInfo.FindSystemTimeZoneById(windowsTimeZone);
-                var dateTime = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, timeZoneInfo);
+                var dateTime = GetTimeZoneTime(enrichedTimezone:enrichedTimezone);
 
                 results.Add(new Result{
                     Title = $"{enrichedTimezone.TerritoryName} - {enrichedTimezone.SpecificLocation}",
