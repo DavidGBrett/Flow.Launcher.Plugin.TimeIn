@@ -23,11 +23,11 @@ namespace Flow.Launcher.Plugin.TimeIn
             Refresh();
         }
 
-        private bool isExpired() => _currentTimeProvider() - _lastRefreshTime > _refreshInterval;
+        private bool IsExpired() => _currentTimeProvider() - _lastRefreshTime > _refreshInterval;
 
         private void RefreshIfExpired()
         {
-            if (isExpired())
+            if (IsExpired())
             {
                 Refresh();
             }
@@ -35,7 +35,7 @@ namespace Flow.Launcher.Plugin.TimeIn
 
         public void Refresh()
         {
-            if (! isExpired()) return;
+            if (! IsExpired()) return;
 
             var territoriesToTimeZones = TZConvert.GetIanaTimeZoneNamesByTerritory();
 
