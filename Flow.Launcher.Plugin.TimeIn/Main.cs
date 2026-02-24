@@ -90,19 +90,21 @@ namespace Flow.Launcher.Plugin.TimeIn
 
             var results = new List<Result>();
 
-            foreach (var savedTimezone in _settings.SavedTimezones)
+            foreach (var ianaTimeZone in _settings.SavedTimezones)
             {
-                if (! savedTimezone.IanaTimeZone.ToLower().Contains(filter)) continue;
+                var enrichedTimezone = timezoneToEnriched[ianaTimeZone];
 
-                string windowsTimeZone = TZConvert.IanaToWindows(savedTimezone.IanaTimeZone);
+                if (! enrichedTimezone.IanaTimeZone.ToLower().Contains(filter)) continue;
+
+                string windowsTimeZone = TZConvert.IanaToWindows(enrichedTimezone.IanaTimeZone);
                 var timeZoneInfo = TimeZoneInfo.FindSystemTimeZoneById(windowsTimeZone);
                 var dateTime = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, timeZoneInfo);
 
                 results.Add(new Result{
-                    Title = $"{savedTimezone.TerritoryName} - {savedTimezone.SpecificLocation}",
+                    Title = $"{enrichedTimezone.TerritoryName} - {enrichedTimezone.SpecificLocation}",
                     SubTitle = $"{dateTime:HH:mm}",
                     Glyph = new GlyphInfo("sans-serif",$"{dateTime:HH}"),
-                    ContextData = savedTimezone
+                    ContextData = enrichedTimezone
                 }); 
             }
 
@@ -141,7 +143,7 @@ namespace Flow.Launcher.Plugin.TimeIn
                     SubTitle = SubTitle,
                     Action =  _ =>
                     {
-                        _settings.SavedTimezones.Add(tzInfo);
+                        _settings.SavedTimezones.Add(tzInfo.IanaTimeZone);
                         _context.API.SaveSettingJsonStorage<Settings>();
 
                         _context.API.ChangeQuery(_mainActionKeyword);
@@ -169,7 +171,7 @@ namespace Flow.Launcher.Plugin.TimeIn
                         Glyph = new GlyphInfo("sans-serif","X"),
                         Action = _ =>
                         {
-                            _settings.SavedTimezones.Remove(savedTimezone);
+                            _settings.SavedTimezones.Remove(savedTimezone.IanaTimeZone);
                             _context.API.SaveSettingJsonStorage<Settings>();
                             _context.API.ReQuery();
 
