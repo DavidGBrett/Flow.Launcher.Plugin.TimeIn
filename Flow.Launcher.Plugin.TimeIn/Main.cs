@@ -18,7 +18,6 @@ namespace Flow.Launcher.Plugin.TimeIn
     {
         private PluginInitContext _context;
         private Settings _settings;
-        private HttpClient _httpClient;
         private string _mainActionKeyword;
         private EnrichedTimeZoneProvider enrichedTZProvider;
 
@@ -27,11 +26,6 @@ namespace Flow.Launcher.Plugin.TimeIn
             _context = context;
 
             _settings = _context.API.LoadSettingJsonStorage<Settings>();
-
-            _httpClient = new HttpClient
-            {
-                Timeout = TimeSpan.FromSeconds(30)
-            };
 
             _mainActionKeyword = _context.CurrentPluginMetadata.ActionKeyword;
 
