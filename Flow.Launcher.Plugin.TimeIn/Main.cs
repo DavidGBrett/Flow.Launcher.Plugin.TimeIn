@@ -106,7 +106,9 @@ namespace Flow.Launcher.Plugin.TimeIn
                         Title = title,
                         SubTitle = subTitle,
                         Glyph = glyph,
-                        ContextData = (true,enrichedTimezone)
+                        ContextData = new ResultContextData(
+                            IsSaved:true, EnrichedTimeZone:enrichedTimezone
+                        ),
                     }
                 ); 
             }
@@ -156,7 +158,9 @@ namespace Flow.Launcher.Plugin.TimeIn
                         Title = title,
                         SubTitle = subTitle,
                         Glyph = glyph,
-                        ContextData = (false,tzInfo),
+                        ContextData = new ResultContextData(
+                            IsSaved:false, EnrichedTimeZone:tzInfo
+                        ),
                         Action =  _ =>
                         {
                             _settings.SavedTimeZones.Add(tzInfo.IanaTimeZone);
@@ -181,44 +185,38 @@ namespace Flow.Launcher.Plugin.TimeIn
         {
             var results = new List<Result>();
 
-            switch (selectedResult.ContextData)
+            var contextData = (ResultContextData) selectedResult.ContextData;
+
+            if (contextData.IsSaved)
             {
-                case (bool isSaved, EnrichedTimeZoneInfo savedTimezone):
+                results.Add(new Result
                 {
-                    if (isSaved)
+                    Title = "Delete",
+                    SubTitle = "Delete this timezone item",
+                    Glyph = new GlyphInfo("sans-serif"," X"),
+                    Action = _ =>
                     {
-                        results.Add(new Result
-                        {
-                            Title = "Delete",
-                            SubTitle = "Delete this timezone item",
-                            Glyph = new GlyphInfo("sans-serif"," X"),
-                            Action = _ =>
-                            {
-                                _settings.SavedTimeZones.Remove(savedTimezone.IanaTimeZone);
-                                _context.API.SaveSettingJsonStorage<Settings>();
-                                _context.API.ReQuery();
+                        _settings.SavedTimeZones.Remove(contextData.EnrichedTimeZone.IanaTimeZone);
+                        _context.API.SaveSettingJsonStorage<Settings>();
+                        _context.API.ReQuery();
 
-                                return false;
-                            }
-                        });
+                        return false;
                     }
-                    
-
-                    results.Add(new Result
-                    {
-                        Title = "Copy IANA timezone",
-                        SubTitle = $"{savedTimezone.IanaTimeZone}",
-                        Glyph = new GlyphInfo("sans-serif","📋"),
-                        Action = _ =>
-                        {
-                            _context.API.CopyToClipboard(savedTimezone.IanaTimeZone);
-                            return false;
-                        }
-                    });
-
-                    break;
-                }
+                });
             }
+            
+
+            results.Add(new Result
+            {
+                Title = "Copy IANA timezone",
+                SubTitle = $"{contextData.EnrichedTimeZone.IanaTimeZone}",
+                Glyph = new GlyphInfo("sans-serif","📋"),
+                Action = _ =>
+                {
+                    _context.API.CopyToClipboard(contextData.EnrichedTimeZone.IanaTimeZone);
+                    return false;
+                }
+            });
             
             return results;
         }
