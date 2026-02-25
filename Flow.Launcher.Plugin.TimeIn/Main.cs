@@ -106,7 +106,7 @@ namespace Flow.Launcher.Plugin.TimeIn
                         Title = title,
                         SubTitle = subTitle,
                         Glyph = glyph,
-                        ContextData = enrichedTimezone
+                        ContextData = (true,enrichedTimezone)
                     }
                 ); 
             }
@@ -156,6 +156,7 @@ namespace Flow.Launcher.Plugin.TimeIn
                         Title = title,
                         SubTitle = subTitle,
                         Glyph = glyph,
+                        ContextData = (false,tzInfo),
                         Action =  _ =>
                         {
                             _settings.SavedTimeZones.Add(tzInfo.IanaTimeZone);
@@ -182,23 +183,26 @@ namespace Flow.Launcher.Plugin.TimeIn
 
             switch (selectedResult.ContextData)
             {
-                case EnrichedTimeZoneInfo savedTimezone:
+                case (bool isSaved, EnrichedTimeZoneInfo savedTimezone):
                 {
-                    
-                    results.Add(new Result
+                    if (isSaved)
                     {
-                        Title = "Delete",
-                        SubTitle = "Delete this timezone item",
-                        Glyph = new GlyphInfo("sans-serif"," X"),
-                        Action = _ =>
+                        results.Add(new Result
                         {
-                            _settings.SavedTimeZones.Remove(savedTimezone.IanaTimeZone);
-                            _context.API.SaveSettingJsonStorage<Settings>();
-                            _context.API.ReQuery();
+                            Title = "Delete",
+                            SubTitle = "Delete this timezone item",
+                            Glyph = new GlyphInfo("sans-serif"," X"),
+                            Action = _ =>
+                            {
+                                _settings.SavedTimeZones.Remove(savedTimezone.IanaTimeZone);
+                                _context.API.SaveSettingJsonStorage<Settings>();
+                                _context.API.ReQuery();
 
-                            return false;
-                        }
-                    });
+                                return false;
+                            }
+                        });
+                    }
+                    
 
                     results.Add(new Result
                     {
