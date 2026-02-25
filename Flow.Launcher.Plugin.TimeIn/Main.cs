@@ -189,7 +189,7 @@ namespace Flow.Launcher.Plugin.TimeIn
                     {
                         Title = "Delete",
                         SubTitle = "Delete this timezone item",
-                        Glyph = new GlyphInfo("sans-serif","X"),
+                        Glyph = new GlyphInfo("sans-serif"," X"),
                         Action = _ =>
                         {
                             _settings.SavedTimeZones.Remove(savedTimezone.IanaTimeZone);
