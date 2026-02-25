@@ -190,8 +190,8 @@ namespace Flow.Launcher.Plugin.TimeIn
             {
                 results.Add(new Result
                 {
-                    Title = "Delete",
-                    SubTitle = "Delete this timezone item",
+                    Title = "Remove",
+                    SubTitle = "Remove from your saved list of timezones",
                     Glyph = new GlyphInfo("sans-serif"," X"),
                     Action = _ =>
                     {
