@@ -200,6 +200,18 @@ namespace Flow.Launcher.Plugin.TimeIn
                         }
                     });
 
+                    results.Add(new Result
+                    {
+                        Title = "Copy IANA timezone",
+                        SubTitle = $"{savedTimezone.IanaTimeZone}",
+                        Glyph = new GlyphInfo("sans-serif","📋"),
+                        Action = _ =>
+                        {
+                            _context.API.CopyToClipboard(savedTimezone.IanaTimeZone);
+                            return false;
+                        }
+                    });
+
                     break;
                 }
             }
