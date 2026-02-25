@@ -20,6 +20,7 @@ namespace Flow.Launcher.Plugin.TimeIn
         private Settings _settings;
         private string _mainActionKeyword;
         private EnrichedTimeZoneProvider enrichedTZProvider;
+        private const string addKeyword = "add-";
 
         public Task InitAsync(PluginInitContext context)
         {
@@ -41,8 +42,6 @@ namespace Flow.Launcher.Plugin.TimeIn
             token.ThrowIfCancellationRequested();
 
             var results = new List<Result>();
-
-            string addKeyword = "add-";
 
             if (query.Search.StartsWith(addKeyword)){
                 var filter = query.Search.Substring(addKeyword.Length).ToLower();
@@ -120,7 +119,7 @@ namespace Flow.Launcher.Plugin.TimeIn
                 Action = _ =>
                 {
                     // Change to the add group query
-                    _context.API.ChangeQuery($"{_mainActionKeyword} add-{filter}",false);
+                    _context.API.ChangeQuery($"{_mainActionKeyword} {addKeyword}{filter}",false);
                     return false;
                 }
             });
