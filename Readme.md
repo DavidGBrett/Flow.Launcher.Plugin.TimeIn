@@ -20,7 +20,7 @@ Get the current time around the world using [Flow launcher](https://github.com/F
 
 ### Plugin Manager
 1. Open Flow Launcher
-2. Search for ``pm install Virtual Desktops by DavidGBrett`` 
+2. Search for ``pm install Time In by DavidGBrett`` 
 3. Press enter to install the plugin
 
 ### Manual Debug Install
