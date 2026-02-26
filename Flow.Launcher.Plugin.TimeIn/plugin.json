@@ -2,7 +2,7 @@
     "ID": "3BD17231C4B04DFFABBE2C40668D052D",
     "ActionKeyword": "ti",
     "Name": "Time In",
-    "Description": "Get the current time around the world",
+    "Description": "Get the current time in different timezones around the world",
     "Author": "DavidGBrett",
     "Version": "1.0.0",
     "Language": "csharp",
