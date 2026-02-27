@@ -11,7 +11,7 @@
 
 Get the current time around the world using [Flow launcher](https://github.com/Flow-Launcher/Flow.Launcher).
 
-### Usage
+## Usage
 - Type `ti` to see the current time in your saved timezones and the option to add more.
 - Select the `Add Timezone` option or type `ti add-` to see a list of timezones you can add. Press Enter or click on one to add it.
 - Right-click on a timezone to open its context menu. From there, you can copy the IANA timezone name or, if it is a saved timezone, remove it.
