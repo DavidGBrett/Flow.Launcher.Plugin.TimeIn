@@ -26,3 +26,7 @@ Get the current time around the world using [Flow launcher](https://github.com/F
 ### Manual Debug Install
 1. Download this repository
 2. Run the file ``debug.ps1``
+
+
+## License
+MIT - See LICENSE file for details.
